@@ -1,0 +1,4 @@
+pandas
+tweepy
+google-cloud-pubsub
+google-auth
