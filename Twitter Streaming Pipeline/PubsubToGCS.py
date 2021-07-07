@@ -56,5 +56,5 @@ def hello_pubsub(event, context):
     pubsub_to_gcs = PubsubToGCS()
     filtered_data = pubsub_to_gcs.extract_contents(message_dict)
     data_frame = pubsub_to_gcs.transform_data(filtered_data)
-    filename = 'td' + str(filtered_data[0]) + '@' + str(filtered_data[1])
+    filename = 'td-' + str(filtered_data[0]) + '@' + str(filtered_data[1])
     pubsub_to_gcs.write_to_gcs(data_frame, filename)
