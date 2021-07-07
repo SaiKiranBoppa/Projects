@@ -23,11 +23,11 @@ class PubsubToGCS:
 
         try:
             required_data = [data['id'], data['created_at'], extract_tweet(data), data['source'],
+                             data['reply_count'], data['retweet_count'], data['favorite_count'],
                              data['user']['id'], data['user']['name'], data['user']['location'],
                              data['user']['followers_count'], data['user']['friends_count'],
                              data['user']['listed_count'], data['user']['favourites_count'],
-                             data['user']['statuses_count'], data['user']['created_at'],
-                             data['reply_count'], data['retweet_count'], data['favorite_count']]
+                             data['user']['statuses_count'], data['user']['created_at']]
             return required_data
         except Exception as e:
             logging.warning(f"Error during extracting data - {str(e)}")
