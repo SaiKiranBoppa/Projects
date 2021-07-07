@@ -9,22 +9,29 @@ class PubsubToGCS:
         self.bucket_name = 'twitter_streaming_data_bucket'
 
     def extract_contents(self, data):
-        if 'retweeted_status' in data:
-            logging.info("Skipping this message as it is a re-tweet.")
-            raise SystemExit(0)
-        else:
-            try:
-                required_data = [data['id'], data['created_at'], data['extended_tweet']['full_text'], data['source'],
-                                 data['user']['id'], data['user']['name'], data['user']['location'],
-                                 data['user']['followers_count'], data['user']['friends_count'],
-                                 data['user']['listed_count'],
-                                 data['user']['favourites_count'], data['user']['statuses_count'],
-                                 data['user']['created_at'],
-                                 data['reply_count'], data['retweet_count'], data['favorite_count']]
-                return required_data
-            except Exception as e:
-                logging.warning(f"Error during extracting data - {str(e)}")
-                raise
+        def extract_tweet(tweet_data):
+            if 'retweeted_status' in tweet_data:
+                try:
+                    return 'RT - ' + tweet_data['retweeted_status']['extended_tweet']['full_text']
+                except KeyError:
+                    return 'RT - ' + tweet_data['retweeted_status']['text']
+            else:
+                try:
+                    return tweet_data['extended_tweet']['full_text']
+                except KeyError:
+                    return tweet_data['text']
+
+        try:
+            required_data = [data['id'], data['created_at'], extract_tweet(data), data['source'],
+                             data['user']['id'], data['user']['name'], data['user']['location'],
+                             data['user']['followers_count'], data['user']['friends_count'],
+                             data['user']['listed_count'], data['user']['favourites_count'],
+                             data['user']['statuses_count'], data['user']['created_at'],
+                             data['reply_count'], data['retweet_count'], data['favorite_count']]
+            return required_data
+        except Exception as e:
+            logging.warning(f"Error during extracting data - {str(e)}")
+            raise
 
     def transform_data(self, data):
         try:
@@ -56,5 +63,5 @@ def hello_pubsub(event, context):
     pubsub_to_gcs = PubsubToGCS()
     filtered_data = pubsub_to_gcs.extract_contents(message_dict)
     data_frame = pubsub_to_gcs.transform_data(filtered_data)
-    filename = 'td-' + str(filtered_data[0]) + '@' + str(filtered_data[1])
+    filename = 'td-' +str(filtered_data[0]) + '@' + str(filtered_data[1])
     pubsub_to_gcs.write_to_gcs(data_frame, filename)
