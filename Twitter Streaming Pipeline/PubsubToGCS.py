@@ -35,7 +35,7 @@ class PubsubToGCS:
 
     def transform_data(self, data):
         try:
-            df = pd.DataFrame(data)
+            df = pd.DataFrame(data).T
             if not df.empty:
                 logging.info(f"Created DataFrame with {df.shape[0]} rows and {df.shape[1]} columns")
             else:
