@@ -22,9 +22,10 @@ class PubsubToGCS:
                     return tweet_data['text']
 
         try:
-            required_data = [data['id'], data['created_at'], extract_tweet(data), data['source'],
-                             data['reply_count'], data['retweet_count'], data['favorite_count'],
-                             data['user']['id'], data['user']['name'], data['user']['location'],
+            required_data = [data['id'], data['created_at'], extract_tweet(data).replace(',' , ''),
+                             data['source'], data['reply_count'], data['retweet_count'], data['favorite_count'],
+                             data['user']['id'], data['user']['name'].replace(',' , ''),
+                             data['user']['location'].replace(',' , '') if data['user']['location'] else None,
                              data['user']['followers_count'], data['user']['friends_count'],
                              data['user']['listed_count'], data['user']['favourites_count'],
                              data['user']['statuses_count'], data['user']['created_at']]
@@ -49,7 +50,7 @@ class PubsubToGCS:
         storage_client = storage.Client()
         bucket = storage_client.get_bucket(self.bucket_name)
         blob = bucket.blob(f'{filename}.csv')
-        blob.upload_from_string(data=df.to_csv(index=False), content_type='text/csv')
+        blob.upload_from_string(data=df.to_csv(index=False, header=None), content_type='text/csv')
         logging.info('Sucessfully written file to Cloud storage.')
 
 def hello_pubsub(event, context):
@@ -63,5 +64,5 @@ def hello_pubsub(event, context):
     pubsub_to_gcs = PubsubToGCS()
     filtered_data = pubsub_to_gcs.extract_contents(message_dict)
     data_frame = pubsub_to_gcs.transform_data(filtered_data)
-    filename = 'td-' +str(filtered_data[0]) + '@' + str(filtered_data[1])
+    filename = 'td-' +str(filtered_data[0])
     pubsub_to_gcs.write_to_gcs(data_frame, filename)
